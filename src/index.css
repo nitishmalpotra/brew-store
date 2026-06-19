@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/* Semantic colors as runtime vars so light/dark flips without touching components. */
+:root {
+  --ink: #15131b;
+  --paper: #f6f2e8;
+  --surface: #ffffff;
+  --muted: #4b4751;
+  --faint: #908c97;
+  --line: #d8d2c4;
+  --dot: rgba(21, 19, 27, 0.07);
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --ink: #ece7da;
+  --paper: #131119;
+  --surface: #201d28;
+  --muted: #a8a4b2;
+  --faint: #6c6776;
+  --line: #34303d;
+  --dot: rgba(236, 231, 218, 0.06);
+  color-scheme: dark;
+}
+
+@theme {
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+
+  --font-display: "Bangers", system-ui, sans-serif;
+  --font-sans: "Comic Neue", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  --shadow-ink: 4px 4px 0 0 var(--ink);
+  --shadow-ink-sm: 2px 2px 0 0 var(--ink);
+  --shadow-ink-lg: 7px 7px 0 0 var(--ink);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background-color: var(--paper);
+    background-image: radial-gradient(var(--dot) 1.3px, transparent 1.4px);
+    background-size: 16px 16px;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    user-select: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  input {
+    user-select: text;
+  }
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--ink);
+    border-radius: 999px;
+    border: 4px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+/* comic halftone fill */
+.halftone {
+  background-image: radial-gradient(var(--ink) 26%, transparent 28%);
+  background-size: 7px 7px;
+}
+
+/* explosion / "POW" burst shape for success */
+.burst {
+  clip-path: polygon(
+    50% 0%, 61% 19%, 83% 12%, 78% 35%, 100% 43%, 82% 56%, 95% 78%, 70% 74%,
+    64% 99%, 50% 80%, 36% 99%, 30% 74%, 5% 78%, 18% 56%, 0% 43%, 22% 35%,
+    17% 12%, 39% 19%
+  );
+}
+
+/* animated barber-pole stripes for the install progress bar */
+@keyframes stripe {
+  to {
+    background-position: 24px 0;
+  }
+}
+.stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--ink) 0 8px,
+    transparent 8px 16px
+  );
+  background-size: 24px 24px;
+  animation: stripe 0.55s linear infinite;
+}
+
+@keyframes slideup {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.slideup {
+  animation: slideup 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fadein {
+  animation: fadein 0.16s ease-out both;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.5) rotate(-12deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+.pop {
+  animation: pop 0.4s cubic-bezier(0.2, 1.4, 0.5, 1) both;
+}
+
+@keyframes grow {
+  from {
+    width: 0;
+  }
+}
+.grow {
+  animation: grow 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
