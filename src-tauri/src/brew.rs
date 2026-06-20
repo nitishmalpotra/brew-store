@@ -10,8 +10,7 @@ static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 // Args are passed to Command without a shell, so there is no shell-injection vector;
 // this simply bounds the blast radius if the frontend were ever compromised.
 const ALLOWED: &[&str] = &[
-    "install", "uninstall", "upgrade", "list", "outdated", "update", "info", "search",
-    "--version", "--prefix",
+    "install", "uninstall", "upgrade", "list", "outdated", "update", "--version", "--prefix",
 ];
 fn allowed(args: &[String]) -> bool {
     args.first().map(|s| ALLOWED.contains(&s.as_str())).unwrap_or(false)

@@ -71,12 +71,6 @@
   }
 }
 
-/* comic halftone fill */
-.halftone {
-  background-image: radial-gradient(var(--ink) 26%, transparent 28%);
-  background-size: 7px 7px;
-}
-
 /* explosion / "POW" burst shape for success */
 .burst {
   clip-path: polygon(

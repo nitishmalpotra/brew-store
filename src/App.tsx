@@ -222,6 +222,7 @@ export default function App() {
       />
       <main className="flex-1 flex flex-col min-w-0">
         <header className="pt-9 px-7 pb-4">
+          <div className="max-w-5xl mx-auto">
           {view === "dashboard" && <h1 className="font-display text-3xl tracking-wide">Dashboard</h1>}
           {view === "browse" && (
             <div className="flex items-center gap-2.5 rounded-lg bg-surface border-2 border-ink shadow-ink-sm focus-within:shadow-ink px-4 max-w-2xl transition">
@@ -251,7 +252,7 @@ export default function App() {
             </div>
           )}
           {view === "updates" && (
-            <div className="flex items-center justify-between gap-3 flex-wrap max-w-3xl">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <h1 className="font-display text-3xl tracking-wide">Updates</h1>
               <div className="flex gap-2">
                 <Btn tone="ghost" onClick={checkUpdates} disabled={checking}>
@@ -261,10 +262,11 @@ export default function App() {
               </div>
             </div>
           )}
+          </div>
         </header>
 
         <section className="flex-1 overflow-auto px-7 pb-24">
-          <div className="flex flex-col gap-2 max-w-3xl">
+          <div className="flex flex-col gap-2 max-w-5xl mx-auto">
             {view === "dashboard" && (
               <Dashboard
                 formulae={inst.formulae.size}

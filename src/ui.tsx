@@ -179,7 +179,7 @@ export function Sidebar({ view, setView, installedCount, updateCount, instTab, o
   );
 }
 
-export function StatusPill({ state }: { state: PkgState }) {
+function StatusPill({ state }: { state: PkgState }) {
   if (state === "installed")
     return <span className="text-[10px] font-bold uppercase rounded border-2 border-ink px-1.5 bg-ink text-paper">Installed</span>;
   if (state === "outdated")
@@ -242,7 +242,7 @@ export function Dashboard({ formulae, casks, updates, brew, brewLoading, categor
 }) {
   const max = categories[0]?.count || 1;
   return (
-    <div className="fadein flex flex-col gap-4 max-w-4xl">
+    <div className="fadein flex flex-col gap-4">
       <div className="grid grid-cols-3 gap-4">
         <StatCard label="Formulae" value={formulae} icon={I.box} onClick={() => go("installed")} />
         <StatCard label="Casks" value={casks} icon={I.box} onClick={() => go("installed")} />

@@ -23,35 +23,69 @@ Homebrew is the package manager most Mac developers use — but it's terminal-on
 - **🔄 Updates** — see what's outdated, update one or all, or run a real `brew update` to check upstream.
 - **⌘K command palette**, light & dark themes, and full keyboard navigation.
 
-## Install
+## Build & run
 
-**Requirements:** a Mac on Apple Silicon with [Homebrew](https://brew.sh) installed (at `/opt/homebrew`).
+brew·store isn't on the Mac App Store (a sandboxed app can't run `brew`) and has no pre-built download yet, so you build it locally. It's a handful of copy-paste commands.
 
-> Pre-built downloads will be posted on the [Releases](https://github.com/nitishmalpotra/brew-store/releases) page. Until then, build it from source — it's three commands.
+**Tested on:** macOS on Apple Silicon. (Intel Macs may work as long as `brew` is on your `PATH`, but that's untested.)
 
-### Build from source
+### 1. Install the toolchain (one time)
 
-1. **Install the toolchain** (one time):
+You need four things — **Homebrew**, **Xcode Command Line Tools**, **Node.js**, and **Rust**:
 
-   ```bash
-   xcode-select --install            # Xcode Command Line Tools
-   brew install node rust            # Node.js + Rust
-   ```
+```bash
+# Homebrew — skip if you already have it
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-2. **Clone, install, run:**
+# Xcode Command Line Tools (C compiler + macOS SDK)
+xcode-select --install
 
-   ```bash
-   git clone https://github.com/nitishmalpotra/brew-store.git
-   cd brew-store
-   npm install
-   npm run tauri dev                 # launches the app
-   ```
+# Node.js (v20 or newer)
+brew install node
 
-3. **Build a standalone `.app`** (optional):
+# Rust (official installer — accept the defaults)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+```
 
-   ```bash
-   npm run tauri build               # output in src-tauri/target/release/bundle/
-   ```
+Confirm everything is ready:
+
+```bash
+node --version    # v20 or newer
+cargo --version   # any recent stable
+brew --version    # Homebrew is what the app drives
+```
+
+### 2. Clone and run
+
+```bash
+git clone https://github.com/nitishmalpotra/brew-store.git
+cd brew-store
+npm install
+npm run tauri dev
+```
+
+The **first launch compiles the Rust backend**, so give it a minute or two — later launches are instant. A window opens on the Dashboard.
+
+### 3. Build a standalone app (optional)
+
+```bash
+npm run tauri build
+```
+
+The finished app lands at:
+
+```
+src-tauri/target/release/bundle/macos/brew-store.app
+```
+
+Drag it into `/Applications` and open it like any other app. It's an unsigned local build, so if you copy it to a **different** Mac, that Mac will warn on first launch — right-click the app → **Open** to get past Gatekeeper.
+
+### Troubleshooting
+
+- **`cargo: command not found`** — run `source "$HOME/.cargo/env"`, or just open a new terminal.
+- **`xcrun: error: invalid active developer path`** — run `xcode-select --install`.
+- **Window opens but no packages load** — make sure `brew` works in your own terminal (`brew --version`); the app shells out to your local Homebrew.
 
 ## Using it
 
@@ -78,13 +112,7 @@ Built with [Tauri 2](https://tauri.app) (Rust) + [React 19](https://react.dev) +
 
 ## Contributing
 
-Issues and PRs welcome. For development:
-
-```bash
-npm install
-npm run tauri dev          # hot-reloading dev build
-npm run build              # type-check + build the frontend
-```
+Issues and PRs welcome. Follow **Build & run** above to get a dev environment — `npm run tauri dev` hot-reloads, and `npm run build` type-checks and builds the frontend.
 
 ## License
 

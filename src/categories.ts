@@ -18,7 +18,7 @@ const RULES: [string, string[]][] = [
   ["Libraries", ["library", "framework", " sdk", "bindings", "headers"]],
 ];
 
-export function categorize(p: Pkg): string {
+function categorize(p: Pkg): string {
   const hay = ` ${p.name} ${p.desc} `.toLowerCase();
   for (const [cat, kws] of RULES) {
     if (kws.some((kw) => hay.includes(kw))) return cat;
