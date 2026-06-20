@@ -57,6 +57,7 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   const refreshLocal = useCallback(async () => {
     const [i, o, b] = await Promise.all([api.installed(), api.outdated(), api.brewInfo()]);
@@ -103,14 +104,18 @@ export default function App() {
     if (view !== "installed") setSel(new Set());
   }, [view]);
 
-  const outdatedNames = useMemo(() => new Set(outdated.map((o) => o.name)), [outdated]);
+  const outdatedByName = useMemo(() => {
+    const m = new Map<string, api.Outdated>();
+    for (const o of outdated) m.set(o.name, o);
+    return m;
+  }, [outdated]);
   const stateOf = useCallback(
     (p: Pkg): PkgState => {
-      if (outdatedNames.has(p.name)) return "outdated";
+      if (outdatedByName.has(p.name)) return "outdated";
       if ((p.cask ? inst.casks : inst.formulae).has(p.name)) return "installed";
       return "available";
     },
-    [inst, outdatedNames],
+    [inst, outdatedByName],
   );
 
   const byName = useMemo(() => {
@@ -138,11 +143,6 @@ export default function App() {
     () => outdated.map((o) => byName.get((o.cask ? "c:" : "f:") + o.name) ?? { name: o.name, desc: "", version: o.current, cask: o.cask }),
     [outdated, byName],
   );
-  const outdatedByName = useMemo(() => {
-    const m = new Map<string, api.Outdated>();
-    for (const o of outdated) m.set(o.name, o);
-    return m;
-  }, [outdated]);
 
   const startJob = useCallback(
     async (action: Action, title: string, args: string[]) => {
@@ -161,11 +161,8 @@ export default function App() {
     [refreshLocal],
   );
 
-  const argv = (action: Action, p: Pkg) => [action, ...(p.cask ? ["--cask"] : []), p.name];
-  const install = (p: Pkg) => startJob("install", p.name, argv("install", p));
-  const uninstall = (p: Pkg) => startJob("uninstall", p.name, argv("uninstall", p));
-  const upgrade = (p: Pkg) => startJob("upgrade", p.name, argv("upgrade", p));
-  const onPrimary = (p: Pkg, a: Action) => (a === "install" ? install(p) : a === "uninstall" ? uninstall(p) : upgrade(p));
+  // single-package install / uninstall / upgrade (brew auto-detects cask vs formula via --cask)
+  const run = (action: Action, p: Pkg) => startJob(action, p.name, [action, ...(p.cask ? ["--cask"] : []), p.name]);
 
   const toggleSel = (p: Pkg) =>
     setSel((s) => {
@@ -193,14 +190,14 @@ export default function App() {
 
   const instRow = (p: Pkg) => (
     <PkgRow key={key(p)} pkg={p} state={stateOf(p)} onClick={() => setSelected(p)} select={{ on: sel.has(key(p)), toggle: () => toggleSel(p) }}>
-      <Btn tone="danger" onClick={() => uninstall(p)}>Uninstall</Btn>
+      <Btn tone="danger" onClick={() => run("uninstall", p)}>Uninstall</Btn>
     </PkgRow>
   );
 
   if (syncing) {
     return (
       <div className="flex h-full">
-        <Sidebar view={view} setView={setView} installedCount={0} updateCount={0} instTab={instTab} onInstTab={setInstTab} formulaCount={0} caskCount={0} theme={theme} onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} repoUrl={REPO_URL || undefined} />
+        <Sidebar view={view} setView={setView} installedCount={0} updateCount={0} instTab={instTab} onInstTab={setInstTab} formulaCount={0} caskCount={0} theme={theme} onToggleTheme={toggleTheme} repoUrl={REPO_URL || undefined} />
         <main className="flex-1">
           <Syncing />
         </main>
@@ -233,7 +230,7 @@ export default function App() {
         formulaCount={inst.formulae.size}
         caskCount={inst.casks.size}
         theme={theme}
-        onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+        onToggleTheme={toggleTheme}
         repoUrl={REPO_URL || undefined}
       />
       <main className="flex-1 flex flex-col min-w-0">
@@ -296,7 +293,7 @@ export default function App() {
 
             {view === "browse" &&
               (query === "" ? (
-                <TrendingGrid data={trend} stateOf={stateOf} onOpen={setSelected} onInstall={install} />
+                <TrendingGrid data={trend} stateOf={stateOf} onOpen={setSelected} onInstall={(p) => run("install", p)} />
               ) : results.length === 0 ? (
                 <Empty icon={I.search} title="No matches" sub={`Nothing found for “${query}”.`} />
               ) : (
@@ -304,8 +301,8 @@ export default function App() {
                   const st = stateOf(p);
                   return (
                     <PkgRow key={key(p)} pkg={p} state={st} onClick={() => setSelected(p)}>
-                      {st === "available" && <Btn tone="primary" onClick={() => install(p)}>Install</Btn>}
-                      {st === "outdated" && <Btn tone="primary" onClick={() => upgrade(p)}>Update</Btn>}
+                      {st === "available" && <Btn tone="primary" onClick={() => run("install", p)}>Install</Btn>}
+                      {st === "outdated" && <Btn tone="primary" onClick={() => run("upgrade", p)}>Update</Btn>}
                     </PkgRow>
                   );
                 })
@@ -351,7 +348,7 @@ export default function App() {
                   return (
                     <PkgRow key={key(p)} pkg={p} state="outdated" onClick={() => setSelected(p)}>
                       {o && <span className="text-xs text-muted font-bold tabular-nums mr-1">{o.installed} → {o.current}</span>}
-                      <Btn tone="primary" onClick={() => upgrade(p)}>Update</Btn>
+                      <Btn tone="primary" onClick={() => run("upgrade", p)}>Update</Btn>
                     </PkgRow>
                   );
                 })
@@ -365,7 +362,7 @@ export default function App() {
         pkg={selected}
         state={selected ? stateOf(selected) : "available"}
         onClose={() => setSelected(null)}
-        onPrimary={(a) => selected && onPrimary(selected, a)}
+        onPrimary={(a) => selected && run(a, selected)}
       />
       <InstallOverlay job={job} onClose={() => setJob(null)} />
       <CommandPalette open={palette} onClose={() => setPalette(false)} catalog={catalog} onPick={openPkg} onView={setView} />

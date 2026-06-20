@@ -20,10 +20,10 @@ function slim(d: unknown): string {
 }
 
 /** Fetch the full Homebrew catalog (formulae + casks), cached in localStorage for a day. */
-export async function loadCatalog(force = false): Promise<Pkg[]> {
+export async function loadCatalog(): Promise<Pkg[]> {
   const ts = Number(localStorage.getItem(CACHE_TS) || 0);
   const cached = localStorage.getItem(CACHE);
-  if (!force && cached && Date.now() - ts < MAX_AGE) {
+  if (cached && Date.now() - ts < MAX_AGE) {
     try {
       return JSON.parse(cached) as Pkg[];
     } catch {

@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon.png" width="120" alt="BrewStore" /></p>
+
 # brew·store
 
 **A modern, native macOS app for [Homebrew](https://brew.sh) — search, install, and manage your packages without ever touching the terminal.** Fast, keyboard-friendly, with a hand-drawn black-&-white comic-book look.
