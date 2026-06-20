@@ -8,18 +8,27 @@
   --muted: #4b4751;
   --faint: #908c97;
   --line: #d8d2c4;
+  --bord: #15131b; /* comic outline color */
+  --shadowc: #15131b; /* hard-shadow color */
   --dot: rgba(21, 19, 27, 0.07);
   color-scheme: light;
 }
 [data-theme="dark"] {
-  --ink: #ece7da;
-  --paper: #131119;
-  --surface: #201d28;
-  --muted: #a8a4b2;
-  --faint: #6c6776;
-  --line: #34303d;
-  --dot: rgba(236, 231, 218, 0.06);
+  --ink: #cdc8bf; /* calm off-white for text + fills (not glaring) */
+  --paper: #1a1823; /* soft warm dark, not pure black */
+  --surface: #242029; /* gentle card elevation above the page */
+  --muted: #9a96a2;
+  --faint: #625d6a;
+  --line: #322e3a;
+  --bord: #3a3643; /* dim outline so borders read as structure, not glare */
+  --shadowc: #0f0d15; /* subtle dark depth instead of a bright offset */
+  --dot: rgba(205, 200, 191, 0.04);
   color-scheme: dark;
+}
+
+/* In dark mode, soften the pervasive comic outlines (light mode keeps full-ink borders). */
+[data-theme="dark"] .border-ink {
+  border-color: var(--bord);
 }
 
 @theme {
@@ -33,9 +42,9 @@
   --font-display: "Bangers", system-ui, sans-serif;
   --font-sans: "Comic Neue", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
-  --shadow-ink: 4px 4px 0 0 var(--ink);
-  --shadow-ink-sm: 2px 2px 0 0 var(--ink);
-  --shadow-ink-lg: 7px 7px 0 0 var(--ink);
+  --shadow-ink: 4px 4px 0 0 var(--shadowc);
+  --shadow-ink-sm: 2px 2px 0 0 var(--shadowc);
+  --shadow-ink-lg: 7px 7px 0 0 var(--shadowc);
 }
 
 @layer base {
