@@ -5,7 +5,7 @@ import { search, fmtCount, type Pkg, type Trend, type BrewInfo } from "./api";
 export type PkgState = "installed" | "outdated" | "available";
 export type View = "dashboard" | "browse" | "installed" | "updates";
 export type InstTab = "all" | "formula" | "cask";
-export type Action = "install" | "uninstall" | "upgrade";
+export type Action = "install" | "uninstall" | "upgrade" | "check";
 export type Job = { action: Action; title: string; lines: string[]; status: "running" | "success" | "error" };
 
 // only ever open http(s) links externally
@@ -433,8 +433,8 @@ export function InstallOverlay({ job, onClose }: { job: Job | null; onClose: () 
   }, [job?.lines.length]);
   if (!job) return null;
   const done = job.status !== "running";
-  const verb = job.action === "uninstall" ? "Removing" : job.action === "upgrade" ? "Updating" : "Installing";
-  const past = job.action === "uninstall" ? "Removed" : job.action === "upgrade" ? "Updated" : "Installed";
+  const verb = job.action === "check" ? "Checking" : job.action === "uninstall" ? "Removing" : job.action === "upgrade" ? "Updating" : "Installing";
+  const past = job.action === "check" ? "Checked" : job.action === "uninstall" ? "Removed" : job.action === "upgrade" ? "Updated" : "Installed";
   const headline = job.status === "success" ? `${past} ${job.title}!` : job.status === "error" ? `${verb} failed` : `${verb} ${job.title}…`;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/30 fadein">

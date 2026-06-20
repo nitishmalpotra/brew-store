@@ -42,7 +42,6 @@ export default function App() {
   const [palette, setPalette] = useState(false);
   const [instFilter, setInstFilter] = useState("");
   const [sel, setSel] = useState<Set<string>>(new Set());
-  const [checking, setChecking] = useState(false);
   const [instTab, setInstTab] = useState<InstTab>("all");
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const s = localStorage.getItem("theme");
@@ -172,12 +171,7 @@ export default function App() {
     startJob("uninstall", `${names.length} package${names.length > 1 ? "s" : ""}`, ["uninstall", ...names]);
   };
 
-  const checkUpdates = useCallback(async () => {
-    setChecking(true);
-    await api.brewUpdate();
-    await refreshLocal();
-    setChecking(false);
-  }, [refreshLocal]);
+  const checkUpdates = () => startJob("check", "for updates", ["update"]);
 
   const openPkg = useCallback((p: Pkg) => {
     setView("browse");
@@ -255,9 +249,7 @@ export default function App() {
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <h1 className="font-display text-3xl tracking-wide">Updates</h1>
               <div className="flex gap-2">
-                <Btn tone="ghost" onClick={checkUpdates} disabled={checking}>
-                  {checking ? "Checking…" : "Check for updates"}
-                </Btn>
+                <Btn tone="ghost" onClick={checkUpdates}>Check for updates</Btn>
                 {updatePkgs.length > 0 && <Btn tone="primary" onClick={() => startJob("upgrade", "everything", ["upgrade"])}>Update all</Btn>}
               </div>
             </div>
@@ -329,9 +321,7 @@ export default function App() {
             {view === "updates" &&
               (updatePkgs.length === 0 ? (
                 <Empty icon={I.check} title="You're all up to date" sub="Every installed package is on its latest version. ✨">
-                  <Btn tone="ghost" onClick={checkUpdates} disabled={checking}>
-                    {checking ? "Checking…" : "Check again"}
-                  </Btn>
+                  <Btn tone="ghost" onClick={checkUpdates}>Check again</Btn>
                 </Empty>
               ) : (
                 updatePkgs.map((p) => {

@@ -141,11 +141,6 @@ export function fmtCount(n: number): string {
   return Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n);
 }
 
-/** `brew update` — genuinely fetch upstream definitions, then the caller re-reads outdated. */
-export async function brewUpdate(): Promise<void> {
-  await invoke("brew_query", { args: ["update"] }).catch(() => {});
-}
-
 export type BrewInfo = { version: string; prefix: string; latest: string; updateAvailable: boolean };
 
 const ver = (s: string) => (s.match(/\d+\.\d+(?:\.\d+)?/) ?? [""])[0];

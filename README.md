@@ -12,7 +12,11 @@ Homebrew is the package manager most Mac developers use — but it's terminal-on
 
 ## Screenshots
 
-> _Coming in the next commit — build from source below to see it live in the meantime._
+![Dashboard — installed counts, Homebrew status, and a category breakdown of your library](docs/dashboard.png)
+
+![Browse — trending casks and formulae ranked by real install counts, one-click install](docs/browse.png)
+
+![Installed — formulae and casks split into sections, with filtering and multi-select uninstall](docs/installed.png)
 
 ## Features
 
