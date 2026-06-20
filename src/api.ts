@@ -168,6 +168,16 @@ export async function brewInfo(): Promise<BrewInfo> {
   return { version, prefix, latest, updateAvailable: !!latest && !!version && latest !== version };
 }
 
+/** Is Homebrew installed on this machine? */
+export async function brewExists(): Promise<boolean> {
+  return invoke<boolean>("brew_exists").catch(() => false);
+}
+
+/** Open Terminal running the official Homebrew installer. */
+export async function installHomebrew(): Promise<void> {
+  await invoke("install_homebrew").catch(() => {});
+}
+
 export type LineEvt = { id: number; stream: string; text: string };
 export type DoneEvt = { id: number; code: number; success: boolean };
 

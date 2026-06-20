@@ -13,6 +13,7 @@ import {
   TrendingGrid,
   SelectionBar,
   SectionTitle,
+  Onboarding,
   Syncing,
   Empty,
   I,
@@ -37,6 +38,9 @@ export default function App() {
   const [outdated, setOutdated] = useState<api.Outdated[]>([]);
   const [brew, setBrew] = useState<api.BrewInfo>({ version: "", prefix: "", latest: "", updateAvailable: false });
   const [brewLoading, setBrewLoading] = useState(true);
+  const [brewMissing, setBrewMissing] = useState(false);
+  const [skipBrew, setSkipBrew] = useState(false);
+  const [recheck, setRecheck] = useState(false);
   const [selected, setSelected] = useState<Pkg | null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [palette, setPalette] = useState(false);
@@ -69,7 +73,16 @@ export default function App() {
       setSyncing(false);
       api.trending(cat).then(setTrend).catch(() => {});
     })();
+    api.brewExists().then((ok) => setBrewMissing(!ok));
     refreshLocal();
+  }, [refreshLocal]);
+
+  const recheckBrew = useCallback(async () => {
+    setRecheck(true);
+    const ok = await api.brewExists();
+    setBrewMissing(!ok);
+    if (ok) await refreshLocal();
+    setRecheck(false);
   }, [refreshLocal]);
 
   useEffect(() => {
@@ -191,6 +204,15 @@ export default function App() {
         <main className="flex-1">
           <Syncing />
         </main>
+      </div>
+    );
+  }
+
+  if (brewMissing && !skipBrew) {
+    return (
+      <div className="h-full">
+        <div data-tauri-drag-region className="fixed inset-x-0 top-0 h-9 z-20" />
+        <Onboarding onInstall={() => api.installHomebrew()} onRecheck={recheckBrew} onSkip={() => setSkipBrew(true)} checking={recheck} />
       </div>
     );
   }

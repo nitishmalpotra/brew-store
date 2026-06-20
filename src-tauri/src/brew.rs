@@ -82,6 +82,33 @@ pub fn brew_run(app: AppHandle, args: Vec<String>) -> u64 {
     id
 }
 
+/// Whether Homebrew is installed (Apple-Silicon path, or anything named `brew` on PATH).
+#[tauri::command]
+pub fn brew_exists() -> bool {
+    if std::path::Path::new(BREW_PATH).exists() {
+        return true;
+    }
+    Command::new("brew")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+/// Open Terminal and run the official Homebrew installer (interactive — the user enters
+/// their password and follows the prompts there; it also pulls in Xcode Command Line Tools).
+#[tauri::command]
+pub fn install_homebrew() -> Result<(), String> {
+    Command::new("osascript")
+        .arg("-e")
+        .arg(r#"tell application "Terminal" to activate"#)
+        .arg("-e")
+        .arg(r#"tell application "Terminal" to do script "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"""#)
+        .status()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// Run a brew subcommand and return stdout (for list / outdated / info-style reads).
 #[tauri::command]
 pub fn brew_query(args: Vec<String>) -> Result<String, String> {

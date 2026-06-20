@@ -612,6 +612,42 @@ export function Syncing() {
   );
 }
 
+export function Onboarding({ onInstall, onRecheck, onSkip, checking }: {
+  onInstall: () => void;
+  onRecheck: () => void;
+  onSkip: () => void;
+  checking: boolean;
+}) {
+  const [opened, setOpened] = useState(false);
+  return (
+    <div className="h-full grid place-items-center px-6">
+      <div className="fadein max-w-md text-center">
+        <div className="w-16 h-16 burst bg-ink grid place-items-center text-paper mx-auto">{I.box("w-8 h-8")}</div>
+        <h1 className="mt-5 font-display text-3xl tracking-wide">Homebrew required</h1>
+        <p className="mt-2 text-sm text-muted font-bold leading-relaxed">
+          BrewStore installs and manages packages through <b className="text-ink">Homebrew</b>, which isn't on this Mac yet. Install it
+          once (it's free) and you're set — browsing the catalog works without it.
+        </p>
+        <div className="mt-6 flex flex-col gap-3 items-center">
+          {!opened ? (
+            <Btn tone="primary" onClick={() => { onInstall(); setOpened(true); }}>Install Homebrew</Btn>
+          ) : (
+            <>
+              <p className="text-sm font-bold">Finish the install in the Terminal window that just opened, then:</p>
+              <Btn tone="primary" onClick={onRecheck}>{checking ? "Checking…" : "I've installed it — recheck"}</Btn>
+            </>
+          )}
+          <div className="flex items-center gap-3 text-sm font-bold text-muted">
+            <button onClick={() => openExternal("https://brew.sh")} className="hover:text-ink">What's Homebrew?</button>
+            <span className="text-faint">·</span>
+            <button onClick={onSkip} className="hover:text-ink">Just browse for now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Empty({ icon: ic, title, sub, children }: { icon: (c: string) => ReactNode; title: string; sub: string; children?: ReactNode }) {
   return (
     <div className="h-full grid place-items-center">

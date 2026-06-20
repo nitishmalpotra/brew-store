@@ -93,6 +93,7 @@ Drag it into `/Applications` and open it like any other app. It's an unsigned lo
 
 ## Using it
 
+- **First launch:** if Homebrew isn't installed, BrewStore walks you through installing it (browsing the catalog still works without it).
 - Launch the app — it opens on the **Dashboard** with an overview of your setup.
 - Go to **Browse**, start typing (or hit **⌘K**), and click a package to see details. Hit **Install** — you'll watch `brew` work in real time.
 - **Installed** lists everything you have; use the **Formulae** / **Casks** sub-tabs, filter, tick several, and bulk-uninstall.
