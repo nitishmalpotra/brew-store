@@ -109,6 +109,38 @@ pub fn install_homebrew() -> Result<(), String> {
     Ok(())
 }
 
+/// Re-run a brew command in a Terminal window — for casks that need an admin password
+/// (e.g. a root-owned .app brew can't replace without sudo). Same allowlist as brew_run,
+/// plus a strict charset check so nothing can escape the AppleScript string.
+#[tauri::command]
+pub fn brew_in_terminal(args: Vec<String>) -> Result<(), String> {
+    let safe = |a: &String| a.chars().all(|c| c.is_ascii_alphanumeric() || "@._+-".contains(c));
+    if !allowed(&args) || !args.iter().all(safe) {
+        return Err(format!("blocked: brew {}", args.join(" ")));
+    }
+    Command::new("osascript")
+        .arg("-e")
+        .arg(r#"tell application "Terminal" to activate"#)
+        .arg("-e")
+        .arg(format!(r#"tell application "Terminal" to do script "{} {}""#, BREW_PATH, args.join(" ")))
+        .status()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Names of .app bundles in /Applications — the pool the Adopt view matches against casks.
+/// ponytail: /Applications only; ~/Applications is rare enough to skip.
+#[tauri::command]
+pub fn list_apps() -> Vec<String> {
+    std::fs::read_dir("/Applications")
+        .map(|rd| {
+            rd.filter_map(|e| e.ok()?.file_name().into_string().ok())
+                .filter_map(|n| n.strip_suffix(".app").map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// Run a brew subcommand and return stdout (for list / outdated / info-style reads).
 #[tauri::command]
 pub fn brew_query(args: Vec<String>) -> Result<String, String> {

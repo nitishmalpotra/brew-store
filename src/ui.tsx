@@ -3,10 +3,10 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { search, fmtCount, type Pkg, type Trend, type BrewInfo } from "./api";
 
 export type PkgState = "installed" | "outdated" | "available";
-export type View = "dashboard" | "browse" | "installed" | "updates";
+export type View = "dashboard" | "browse" | "installed" | "updates" | "adopt";
 export type InstTab = "all" | "formula" | "cask";
-export type Action = "install" | "uninstall" | "upgrade" | "check";
-export type Job = { action: Action; title: string; lines: string[]; status: "running" | "success" | "error" };
+export type Action = "install" | "uninstall" | "upgrade" | "check" | "adopt";
+export type Job = { action: Action; title: string; args: string[]; lines: string[]; status: "running" | "success" | "error" };
 
 // only ever open http(s) links externally
 function openExternal(url: string) {
@@ -30,6 +30,7 @@ export const I = {
   grid: icon(<><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>),
   sun: icon(<><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19" /></>),
   moon: icon(<path d="M21 12.8A8 8 0 1 1 11.2 3 6 6 0 0 0 21 12.8Z" />),
+  adopt: icon(<><path d="M12 3v10" /><path d="m8 9 4 4 4-4" /><path d="M4 17v4h16v-4" /></>),
   github: (cls: string) => (
     <svg className={cls} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 .1.8 1.7 2.6 1.3.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z" />
@@ -83,11 +84,12 @@ export function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="font-display text-2xl tracking-wide text-ink mb-3 mt-1">{children}</h2>;
 }
 
-export function Sidebar({ view, setView, installedCount, updateCount, instTab, onInstTab, formulaCount, caskCount, theme, onToggleTheme, repoUrl }: {
+export function Sidebar({ view, setView, installedCount, updateCount, adoptCount, instTab, onInstTab, formulaCount, caskCount, theme, onToggleTheme, repoUrl }: {
   view: View;
   setView: (v: View) => void;
   installedCount: number;
   updateCount: number;
+  adoptCount: number;
   instTab: InstTab;
   onInstTab: (t: InstTab) => void;
   formulaCount: number;
@@ -152,6 +154,7 @@ export function Sidebar({ view, setView, installedCount, updateCount, instTab, o
         </div>
       )}
       {item("updates", "Updates", I.refresh, updateCount ? badge(updateCount, view === "updates") : null)}
+      {item("adopt", "Adopt", I.adopt, adoptCount ? badge(adoptCount, view === "adopt") : null)}
 
       <div className="mt-auto flex flex-col gap-2.5">
         <div className="px-1 text-[12px] text-muted font-bold">
@@ -426,15 +429,15 @@ export function DetailDrawer({ pkg, state, onClose, onPrimary }: {
   );
 }
 
-export function InstallOverlay({ job, onClose }: { job: Job | null; onClose: () => void }) {
+export function InstallOverlay({ job, onClose, onTerminal }: { job: Job | null; onClose: () => void; onTerminal: (args: string[]) => void }) {
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
   }, [job?.lines.length]);
   if (!job) return null;
   const done = job.status !== "running";
-  const verb = job.action === "check" ? "Checking" : job.action === "uninstall" ? "Removing" : job.action === "upgrade" ? "Updating" : "Installing";
-  const past = job.action === "check" ? "Checked" : job.action === "uninstall" ? "Removed" : job.action === "upgrade" ? "Updated" : "Installed";
+  const verb = job.action === "check" ? "Checking" : job.action === "uninstall" ? "Removing" : job.action === "upgrade" ? "Updating" : job.action === "adopt" ? "Adopting" : "Installing";
+  const past = job.action === "check" ? "Checked" : job.action === "uninstall" ? "Removed" : job.action === "upgrade" ? "Updated" : job.action === "adopt" ? "Adopted" : "Installed";
   const headline = job.status === "success" ? `${past} ${job.title}!` : job.status === "error" ? `${verb} failed` : `${verb} ${job.title}…`;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/30 fadein">
@@ -469,7 +472,13 @@ export function InstallOverlay({ job, onClose }: { job: Job | null; onClose: () 
           )}
         </div>
         {done && (
-          <div className="px-6 pb-6 flex justify-end">
+          <div className="px-6 pb-6 flex items-center justify-end gap-2">
+            {job.status === "error" && job.lines.some((l) => l.includes("password is required") || l.includes("a terminal is required")) && (
+              <>
+                <span className="text-xs text-muted font-bold mr-auto">Needs an admin password — finish it in Terminal.</span>
+                <Btn tone="ghost" onClick={() => { onTerminal(job.args); onClose(); }}>Open Terminal</Btn>
+              </>
+            )}
             <Btn tone="primary" onClick={onClose}>Done</Btn>
           </div>
         )}
@@ -525,6 +534,7 @@ export function CommandPalette({ open, onClose, catalog, onPick, onView }: {
       { label: "Go to Browse", view: "browse" as View },
       { label: "Go to Installed", view: "installed" as View },
       { label: "Go to Updates", view: "updates" as View },
+      { label: "Go to Adopt", view: "adopt" as View },
     ];
     const ql = q.trim().toLowerCase();
     return {

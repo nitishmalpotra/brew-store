@@ -36,6 +36,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [inst, setInst] = useState<{ formulae: Set<string>; casks: Set<string> }>({ formulae: new Set(), casks: new Set() });
   const [outdated, setOutdated] = useState<api.Outdated[]>([]);
+  const [apps, setApps] = useState<string[]>([]);
   const [brew, setBrew] = useState<api.BrewInfo>({ version: "", prefix: "", latest: "", updateAvailable: false });
   const [brewLoading, setBrewLoading] = useState(true);
   const [brewMissing, setBrewMissing] = useState(false);
@@ -75,6 +76,7 @@ export default function App() {
       api.trending(cat).then(setTrend).catch(() => {});
     })();
     api.brewExists().then((ok) => setBrewMissing(!ok));
+    api.listApps().then(setApps);
     refreshLocal();
   }, [refreshLocal]);
 
@@ -102,6 +104,7 @@ export default function App() {
 
   useEffect(() => {
     if (view !== "installed") setSel(new Set());
+    if (view === "adopt") api.listApps().then(setApps); // rescan on entry so the list stays fresh
   }, [view]);
 
   const outdatedByName = useMemo(() => {
@@ -148,7 +151,7 @@ export default function App() {
     async (action: Action, title: string, args: string[]) => {
       setSelected(null);
       setPalette(false);
-      setJob({ action, title, lines: [], status: "running" });
+      setJob({ action, title, args, lines: [], status: "running" });
       await api.runStream(
         args,
         (l) => setJob((j) => (j ? { ...j, lines: [...j.lines.slice(-300), l.text] } : j)),
@@ -161,8 +164,19 @@ export default function App() {
     [refreshLocal],
   );
 
-  // single-package install / uninstall / upgrade (brew auto-detects cask vs formula via --cask)
-  const run = (action: Action, p: Pkg) => startJob(action, p.name, [action, ...(p.cask ? ["--cask"] : []), p.name]);
+  const adoptables = useMemo(() => api.adoptable(apps, catalog, inst.casks), [apps, catalog, inst.casks]);
+  const adoptTokens = useMemo(() => new Set(adoptables.map((x) => x.pkg.name)), [adoptables]);
+  // --force reinstalls over the copy already in /Applications; --adopt would fail on any version mismatch
+  const adopt = (p: Pkg) => startJob("adopt", p.name, ["install", "--cask", "--force", p.name]);
+
+  // single-package install / uninstall / upgrade (brew auto-detects cask vs formula via --cask);
+  // installing a cask whose app already exists on disk routes through adopt, else brew errors out
+  const run = (action: Action, p: Pkg) => {
+    if (action === "install" && p.cask && adoptTokens.has(p.name)) return adopt(p);
+    // cask upgrades get --force: self-updated apps leave a stale Caskroom copy that plain upgrade refuses to overwrite
+    const flags = p.cask ? (action === "upgrade" ? ["--cask", "--force"] : ["--cask"]) : [];
+    return startJob(action, p.name, [action, ...flags, p.name]);
+  };
 
   const toggleSel = (p: Pkg) =>
     setSel((s) => {
@@ -197,7 +211,7 @@ export default function App() {
   if (syncing) {
     return (
       <div className="flex h-full">
-        <Sidebar view={view} setView={setView} installedCount={0} updateCount={0} instTab={instTab} onInstTab={setInstTab} formulaCount={0} caskCount={0} theme={theme} onToggleTheme={toggleTheme} repoUrl={REPO_URL || undefined} />
+        <Sidebar view={view} setView={setView} installedCount={0} updateCount={0} adoptCount={0} instTab={instTab} onInstTab={setInstTab} formulaCount={0} caskCount={0} theme={theme} onToggleTheme={toggleTheme} repoUrl={REPO_URL || undefined} />
         <main className="flex-1">
           <Syncing />
         </main>
@@ -225,6 +239,7 @@ export default function App() {
         setView={setView}
         installedCount={inst.formulae.size + inst.casks.size}
         updateCount={outdated.length}
+        adoptCount={adoptables.length}
         instTab={instTab}
         onInstTab={setInstTab}
         formulaCount={inst.formulae.size}
@@ -271,6 +286,14 @@ export default function App() {
                 <Btn tone="ghost" onClick={checkUpdates}>Check for updates</Btn>
                 {updatePkgs.length > 0 && <Btn tone="primary" onClick={() => startJob("upgrade", "everything", ["upgrade"])}>Update all</Btn>}
               </div>
+            </div>
+          )}
+          {view === "adopt" && (
+            <div>
+              <h1 className="font-display text-3xl tracking-wide">Adopt</h1>
+              <p className="text-sm text-muted font-bold mt-1">
+                Apps on this Mac that Homebrew has a cask for. Adopting reinstalls them through brew so updates work here.
+              </p>
             </div>
           )}
           </div>
@@ -353,6 +376,18 @@ export default function App() {
                   );
                 })
               ))}
+
+            {view === "adopt" &&
+              (adoptables.length === 0 ? (
+                <Empty icon={I.check} title="Nothing to adopt" sub="Every app with a Homebrew cask is already managed by brew." />
+              ) : (
+                adoptables.map(({ app, pkg }) => (
+                  <PkgRow key={pkg.name} pkg={pkg} state="available" onClick={() => setSelected(pkg)}>
+                    <span className="text-xs text-muted font-bold mr-1">{app}.app</span>
+                    <Btn tone="primary" onClick={() => adopt(pkg)}>Adopt</Btn>
+                  </PkgRow>
+                ))
+              ))}
           </div>
         </section>
       </main>
@@ -364,7 +399,7 @@ export default function App() {
         onClose={() => setSelected(null)}
         onPrimary={(a) => selected && run(a, selected)}
       />
-      <InstallOverlay job={job} onClose={() => setJob(null)} />
+      <InstallOverlay job={job} onClose={() => setJob(null)} onTerminal={(args) => api.brewInTerminal(args)} />
       <CommandPalette open={palette} onClose={() => setPalette(false)} catalog={catalog} onPick={openPkg} onView={setView} />
     </div>
   );

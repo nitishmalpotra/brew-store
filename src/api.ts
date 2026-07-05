@@ -178,6 +178,33 @@ export async function installHomebrew(): Promise<void> {
   await invoke("install_homebrew").catch(() => {});
 }
 
+/** Re-run a brew command in a Terminal window (casks that need an admin password). */
+export async function brewInTerminal(args: string[]): Promise<void> {
+  await invoke("brew_in_terminal", { args }).catch(() => {});
+}
+
+/** Names of .app bundles in /Applications (no ".app" suffix). */
+export async function listApps(): Promise<string[]> {
+  return invoke<string[]>("list_apps").catch(() => []);
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** Apps on disk that match a cask token but aren't brew-managed yet — candidates for adoption. */
+// ponytail: matches normalized app name against normalized cask token ("Visual Studio Code" →
+// "visual-studio-code"). Misses renamed bundles (zoom.us → zoom); upgrade path is matching the
+// cask API's `name`/artifact fields if people ask for more coverage.
+export function adoptable(apps: string[], catalog: Pkg[], installedCasks: Set<string>): { app: string; pkg: Pkg }[] {
+  const byNorm = new Map<string, Pkg>();
+  for (const p of catalog) if (p.cask && !installedCasks.has(p.name)) byNorm.set(norm(p.name), p);
+  const out: { app: string; pkg: Pkg }[] = [];
+  for (const app of apps) {
+    const p = byNorm.get(norm(app));
+    if (p) out.push({ app, pkg: p });
+  }
+  return out.sort((a, b) => a.app.localeCompare(b.app));
+}
+
 export type LineEvt = { id: number; stream: string; text: string };
 export type DoneEvt = { id: number; code: number; success: boolean };
 

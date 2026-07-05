@@ -8,7 +8,9 @@ pub fn run() {
             brew::brew_run,
             brew::brew_query,
             brew::brew_exists,
-            brew::install_homebrew
+            brew::install_homebrew,
+            brew::list_apps,
+            brew::brew_in_terminal
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
