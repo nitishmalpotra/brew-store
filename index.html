@@ -3,73 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>brew-store</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      /* Static splash shown until React mounts (render into #root replaces it). */
-      html,
-      body,
-      #root {
-        height: 100%;
-        margin: 0;
-      }
-      #splash {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        background: #f6f2e8;
-        color: #15131b;
-        font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      }
-      #splash h1 {
-        margin: 0;
-        font-size: 42px;
-        font-weight: 900;
-        letter-spacing: 0.04em;
-      }
-      #splash p {
-        margin: 0;
-        font-size: 13px;
-        opacity: 0.6;
-      }
-      #splash .spin {
-        width: 22px;
-        height: 22px;
-        border: 3px solid currentColor;
-        border-right-color: transparent;
-        border-radius: 50%;
-        animation: splashspin 0.8s linear infinite;
-      }
-      @keyframes splashspin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      @media (prefers-color-scheme: dark) {
-        #splash {
-          background: #1a1823;
-          color: #cdc8bf;
-        }
-      }
-    </style>
+    <title>BrewStore</title>
   </head>
-
   <body>
-    <div id="root">
-      <div id="splash">
-        <h1>brew&middot;store</h1>
-        <div class="spin"></div>
-        <p>warming up&hellip;</p>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

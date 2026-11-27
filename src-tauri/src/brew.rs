@@ -10,16 +10,19 @@ static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 // Args are passed to Command without a shell, so there is no shell-injection vector;
 // this simply bounds the blast radius if the frontend were ever compromised.
 const ALLOWED: &[&str] = &[
-    "install", "uninstall", "upgrade", "list", "outdated", "update", "--version", "--prefix",
+    "install", "uninstall", "upgrade", "list", "outdated", "update", "cleanup", "--version", "--prefix",
 ];
 fn allowed(args: &[String]) -> bool {
     args.first().map(|s| ALLOWED.contains(&s.as_str())).unwrap_or(false)
 }
 
-// ponytail: hardcode the Apple-Silicon brew path, fall back to PATH lookup.
+// ponytail: hardcode the Apple-Silicon brew path, fall back to PATH lookup (Intel / custom prefixes).
+fn brew_bin() -> &'static str {
+    if std::path::Path::new(BREW_PATH).exists() { BREW_PATH } else { "brew" }
+}
+
 fn brew() -> Command {
-    let bin = if std::path::Path::new(BREW_PATH).exists() { BREW_PATH } else { "brew" };
-    let mut c = Command::new(bin);
+    let mut c = Command::new(brew_bin());
     c.env("HOMEBREW_NO_ENV_HINTS", "1")
         .env("HOMEBREW_NO_AUTO_UPDATE", "1")
         .env("HOMEBREW_NO_ANALYTICS", "1");
@@ -85,14 +88,8 @@ pub fn brew_run(app: AppHandle, args: Vec<String>) -> u64 {
 /// Whether Homebrew is installed (Apple-Silicon path, or anything named `brew` on PATH).
 #[tauri::command]
 pub fn brew_exists() -> bool {
-    if std::path::Path::new(BREW_PATH).exists() {
-        return true;
-    }
-    Command::new("brew")
-        .arg("--version")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+    brew_bin() == BREW_PATH
+        || Command::new("brew").arg("--version").output().map(|o| o.status.success()).unwrap_or(false)
 }
 
 /// Open Terminal and run the official Homebrew installer (interactive — the user enters
@@ -122,7 +119,7 @@ pub fn brew_in_terminal(args: Vec<String>) -> Result<(), String> {
         .arg("-e")
         .arg(r#"tell application "Terminal" to activate"#)
         .arg("-e")
-        .arg(format!(r#"tell application "Terminal" to do script "{} {}""#, BREW_PATH, args.join(" ")))
+        .arg(format!(r#"tell application "Terminal" to do script "{} {}""#, brew_bin(), args.join(" ")))
         .status()
         .map_err(|e| e.to_string())?;
     Ok(())

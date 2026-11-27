@@ -2,7 +2,7 @@
 
 # brew·store
 
-**A modern, native macOS app for [Homebrew](https://brew.sh) — search, install, and manage your packages without ever touching the terminal.** Fast, keyboard-friendly, with a hand-drawn black-&-white comic-book look.
+**A modern, native macOS app for [Homebrew](https://brew.sh) — search, install, and manage your packages without ever touching the terminal.** Fast, keyboard-friendly, and designed to feel like part of macOS.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-111.svg)](LICENSE)
 
@@ -10,24 +10,17 @@
 
 ## What is it?
 
-Homebrew is the package manager most Mac developers use — but it's terminal-only. brew·store gives it a proper graphical home: a searchable storefront for all ~16,000 Homebrew formulae and casks, one-click install/uninstall with live progress, a dashboard of what you've got, and update management — all in a polished native window.
-
-## Screenshots
-
-![Dashboard — installed counts, Homebrew status, and a category breakdown of your library](docs/dashboard.png)
-
-![Browse — trending casks and formulae ranked by real install counts, one-click install](docs/browse.png)
-
-![Installed — formulae and casks split into sections, with filtering and multi-select uninstall](docs/installed.png)
+Homebrew is the package manager most Mac developers use — but it's terminal-only. brew·store gives it a proper graphical home: a searchable storefront for all ~16,000 Homebrew formulae and casks, one-click install/uninstall with real progress, an overview of what you've got, cache cleanup, and update management — all in a polished native window.
 
 ## Features
 
-- **📊 Dashboard** — counts of installed formulae & casks, available updates, your Homebrew version & prefix (and whether Homebrew itself is out of date), plus a breakdown of your library by category.
-- **🔎 Browse** — instant ranked search across the whole catalog, with a **Trending this month** view powered by Homebrew's real install analytics.
-- **⚡ Live install** — every install / update / uninstall streams `brew`'s output into an animated panel.
-- **📦 Installed** — split into **Formulae** and **Casks**, with filtering, multi-select, and bulk uninstall.
-- **🔄 Updates** — see what's outdated, update one or all, or run a real `brew update` to check upstream.
-- **⌘K command palette**, light & dark themes, and full keyboard navigation.
+- **Overview** — your Homebrew version and whether it's current, counts of installed packages, updates and apps ready to adopt, a storage bar of what `brew cleanup` can free with a one-click **Clear Cache…**, and your library by category.
+- **Discover** — the most installed apps and command-line tools this month, ranked by Homebrew's real install analytics, with instant search across all ~16,000 formulae and casks.
+- **Real progress** — installs, updates and cleanups show step progress in the row, in the toolbar's activity viewer and on the Dock icon. Jobs queue, so you can keep browsing.
+- **Installed** — command-line tools and apps in separate lists, with filtering and multi-select uninstall.
+- **Updates** — what's outdated, with **Update All** or one at a time; the Dock badge shows the count.
+- **Adopt** — apps already in `/Applications` that Homebrew has a cask for, so updates can happen here.
+- **Native look** — macOS 27 design with Liquid Glass controls and system light/dark, plus **⌘K** Quick Open and **⌘F** search.
 
 ## Build & run
 
@@ -82,7 +75,7 @@ npm run tauri build
 The finished app lands at:
 
 ```
-src-tauri/target/release/bundle/macos/brew-store.app
+src-tauri/target/release/bundle/macos/BrewStore.app
 ```
 
 Drag it into `/Applications` and open it like any other app. It's an unsigned local build, so if you copy it to a **different** Mac, that Mac will warn on first launch — right-click the app → **Open** to get past Gatekeeper.
@@ -96,30 +89,31 @@ Drag it into `/Applications` and open it like any other app. It's an unsigned lo
 ## Using it
 
 - **First launch:** if Homebrew isn't installed, BrewStore walks you through installing it (browsing the catalog still works without it).
-- Launch the app — it opens on the **Dashboard** with an overview of your setup.
-- Go to **Browse**, start typing (or hit **⌘K**), and click a package to see details. Hit **Install** — you'll watch `brew` work in real time.
-- **Installed** lists everything you have; use the **Formulae** / **Casks** sub-tabs, filter, tick several, and bulk-uninstall.
-- **Updates** shows what's outdated; update individually or **Update all**. **Check for updates** runs `brew update` to pull the latest from upstream.
-- Toggle **light / dark** with the button at the bottom-left.
+- Launch the app — it opens on the **Overview** of your setup.
+- Search from the sidebar (**⌘F**) or **⌘K**, or browse **Discover**. Click a package for details and **Get** to install it; progress shows in the row and the toolbar.
+- **Installed** lists everything you have; switch between **All / Tools / Apps**, filter, **Select** several, and uninstall them together.
+- **Updates** shows what's outdated; update one, or **Update All**. **Check for Updates** on the Overview runs `brew update`.
+- **Clear Cache…** on the Overview runs `brew cleanup --prune=all` after you confirm.
+- Light and dark follow your system appearance.
 
 ## How it works
 
 Homebrew has no GUI API, so brew·store splits the work:
 
 - **Browsing, search, and trending** hit Homebrew's public JSON API (`formulae.brew.sh`) directly from the UI and cache results locally (daily).
-- **Local operations** (`list`, `outdated`, `install`, `uninstall`, `upgrade`, `update`, `--version`, `--prefix`) shell out to your local `brew` binary from a small Rust backend, streaming output back to the UI.
+- **Local operations** (`list`, `outdated`, `install`, `uninstall`, `upgrade`, `update`, `cleanup`, `--version`, `--prefix`) shell out to your local `brew` binary from a small Rust backend, streaming output back to the UI.
 
-Built with [Tauri 2](https://tauri.app) (Rust) + [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev) + [Tailwind CSS 4](https://tailwindcss.com). Because a sandboxed Mac-App-Store app can't run `brew`, this ships as a direct-download app.
+Built with [Tauri 2](https://tauri.app) (Rust) + [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev), with plain CSS for the UI. Because a sandboxed Mac-App-Store app can't run `brew`, this ships as a direct-download app.
 
 ## Security
 
 - The Rust backend only runs an **allowlisted** set of `brew` subcommands; arguments are passed to the process without a shell (no shell-injection vector).
-- A **Content-Security-Policy** restricts the webview to the app itself plus the Homebrew/GitHub/Google-Fonts endpoints it actually needs.
+- A **Content-Security-Policy** restricts the webview to the app itself plus the Homebrew and GitHub endpoints it actually needs.
 - External links are limited to `http(s)` and opened in your default browser. All package data is rendered as text (no HTML injection).
 
 ## Contributing
 
-Issues and PRs welcome. Follow **Build & run** above to get a dev environment — `npm run tauri dev` hot-reloads, and `npm run build` type-checks and builds the frontend.
+Issues and PRs welcome. Follow **Build & run** above to get a dev environment — `npm run tauri dev` hot-reloads, `npm run build` type-checks and builds the frontend, and `npm run check` runs the progress-parser self-check.
 
 ## License
 

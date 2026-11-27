@@ -18,7 +18,7 @@ const RULES: [string, string[]][] = [
   ["Libraries", ["library", "framework", " sdk", "bindings", "headers"]],
 ];
 
-function categorize(p: Pkg): string {
+export function categorize(p: Pkg): string {
   const hay = ` ${p.name} ${p.desc} `.toLowerCase();
   for (const [cat, kws] of RULES) {
     if (kws.some((kw) => hay.includes(kw))) return cat;
@@ -28,6 +28,9 @@ function categorize(p: Pkg): string {
 
 export function categoryCounts(pkgs: Pkg[]): { name: string; count: number }[] {
   const m = new Map<string, number>();
-  for (const p of pkgs) m.set(categorize(p), (m.get(categorize(p)) ?? 0) + 1);
+  for (const p of pkgs) {
+    const c = categorize(p);
+    m.set(c, (m.get(c) ?? 0) + 1);
+  }
   return [...m.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
 }
