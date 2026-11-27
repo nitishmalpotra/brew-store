@@ -12,6 +12,18 @@
 
 Homebrew is the package manager most Mac developers use — but it's terminal-only. brew·store gives it a proper graphical home: a searchable storefront for all ~16,000 Homebrew formulae and casks, one-click install/uninstall with real progress, an overview of what you've got, cache cleanup, and update management — all in a polished native window.
 
+## Screenshots
+
+![Overview — Homebrew status, library counts, a storage bar of what brew cleanup can free, and your library by category](docs/overview.png)
+
+![Discover — this month's most installed apps and tools; ffmpeg installing with step progress in the row, the toolbar and the details pane](docs/discover.png)
+
+![Updates in dark mode — Update All working through packages one by one](docs/updates.png)
+
+<p align="center"><img src="docs/narrow.png" width="320" alt="A narrow window: the sidebar tucks away and Clear Cache asks before deleting anything" /></p>
+
+<sub>Rendered from the design mockup with sample packages.</sub>
+
 ## Features
 
 - **Overview** — your Homebrew version and whether it's current, counts of installed packages, updates and apps ready to adopt, a storage bar of what `brew cleanup` can free with a one-click **Clear Cache…**, and your library by category.
@@ -26,7 +38,7 @@ Homebrew is the package manager most Mac developers use — but it's terminal-on
 
 brew·store isn't on the Mac App Store (a sandboxed app can't run `brew`) and has no pre-built download yet, so you build it locally. It's a handful of copy-paste commands.
 
-**Tested on:** macOS on Apple Silicon. (Intel Macs may work as long as `brew` is on your `PATH`, but that's untested.)
+**Tested on:** macOS on Apple Silicon. (Intel Macs should work, since the app falls back to the `brew` on your `PATH`, but that's untested.)
 
 ### 1. Install the toolchain (one time)
 
@@ -39,7 +51,7 @@ You need four things — **Homebrew**, **Xcode Command Line Tools**, **Node.js**
 # Xcode Command Line Tools (C compiler + macOS SDK)
 xcode-select --install
 
-# Node.js (v20 or newer)
+# Node.js (v22.18 or newer)
 brew install node
 
 # Rust (official installer — accept the defaults)
@@ -50,7 +62,7 @@ source "$HOME/.cargo/env"
 Confirm everything is ready:
 
 ```bash
-node --version    # v20 or newer
+node --version    # v22.18 or newer
 cargo --version   # any recent stable
 brew --version    # Homebrew is what the app drives
 ```
@@ -64,7 +76,7 @@ npm install
 npm run tauri dev
 ```
 
-The **first launch compiles the Rust backend**, so give it a minute or two — later launches are instant. A window opens on the Dashboard.
+The **first launch compiles the Rust backend**, so give it a minute or two — later launches are instant. A window opens on the Overview.
 
 ### 3. Build a standalone app (optional)
 
@@ -77,6 +89,8 @@ The finished app lands at:
 ```
 src-tauri/target/release/bundle/macos/BrewStore.app
 ```
+
+and a disk image to share it sits in `src-tauri/target/release/bundle/dmg/`.
 
 Drag it into `/Applications` and open it like any other app. It's an unsigned local build, so if you copy it to a **different** Mac, that Mac will warn on first launch — right-click the app → **Open** to get past Gatekeeper.
 
