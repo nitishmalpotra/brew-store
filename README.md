@@ -34,71 +34,57 @@ Homebrew is the package manager most Mac developers use — but it's terminal-on
 - **Adopt** — apps already in `/Applications` that Homebrew has a cask for, so updates can happen here.
 - **Native look** — macOS 27 design with Liquid Glass controls and system light/dark, plus **⌘K** Quick Open and **⌘F** search.
 
-## Build & run
+## Install
 
-brew·store isn't on the Mac App Store (a sandboxed app can't run `brew`) and has no pre-built download yet, so you build it locally. It's a handful of copy-paste commands.
+**Requires:** macOS on Apple Silicon (M1 or newer) and [Homebrew](https://brew.sh) — if Homebrew is missing, the app offers to install it on first launch.
 
-**Tested on:** macOS on Apple Silicon. (Intel Macs should work, since the app falls back to the `brew` on your `PATH`, but that's untested.)
+1. Download **`BrewStore_0.3.0_aarch64.dmg`** from the [latest release](https://github.com/nitishmalpotra/brew-store/releases/latest).
+2. Open the DMG and drag **BrewStore** into **Applications**.
+3. The app isn't notarized yet, so macOS blocks the first launch. Clear the download quarantine once:
 
-### 1. Install the toolchain (one time)
+   ```bash
+   xattr -cr /Applications/BrewStore.app
+   ```
 
-You need four things — **Homebrew**, **Xcode Command Line Tools**, **Node.js**, and **Rust**:
+   (Or open it, then go to **System Settings → Privacy & Security** and click **Open Anyway**.)
+4. Launch **BrewStore** from Launchpad or Spotlight.
+
+### Uninstall
+
+Quit the app, then:
 
 ```bash
-# Homebrew — skip if you already have it
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+rm -rf /Applications/BrewStore.app ~/Library/Caches/com.nitishmalpotra.brewstore ~/Library/WebKit/com.nitishmalpotra.brewstore
+```
 
-# Xcode Command Line Tools (C compiler + macOS SDK)
+Your Homebrew packages are untouched.
+
+## Build from source
+
+You need **Xcode Command Line Tools**, **Node.js 22.18+**, and **Rust**:
+
+```bash
 xcode-select --install
-
-# Node.js (v22.18 or newer)
 brew install node
-
-# Rust (official installer — accept the defaults)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
 ```
 
-Confirm everything is ready:
-
-```bash
-node --version    # v22.18 or newer
-cargo --version   # any recent stable
-brew --version    # Homebrew is what the app drives
-```
-
-### 2. Clone and run
+Then:
 
 ```bash
 git clone https://github.com/nitishmalpotra/brew-store.git
 cd brew-store
 npm install
-npm run tauri dev
+npm run tauri dev      # run with hot reload (first launch compiles Rust, ~1–2 min)
+npm run tauri build    # produce the .app and .dmg in src-tauri/target/release/bundle/
 ```
-
-The **first launch compiles the Rust backend**, so give it a minute or two — later launches are instant. A window opens on the Overview.
-
-### 3. Build a standalone app (optional)
-
-```bash
-npm run tauri build
-```
-
-The finished app lands at:
-
-```
-src-tauri/target/release/bundle/macos/BrewStore.app
-```
-
-and a disk image to share it sits in `src-tauri/target/release/bundle/dmg/`.
-
-Drag it into `/Applications` and open it like any other app. It's an unsigned local build, so if you copy it to a **different** Mac, that Mac will warn on first launch — right-click the app → **Open** to get past Gatekeeper.
 
 ### Troubleshooting
 
-- **`cargo: command not found`** — run `source "$HOME/.cargo/env"`, or just open a new terminal.
+- **"BrewStore is damaged and can't be opened"** — that's the quarantine flag; run the `xattr -cr` command from step 3.
+- **`cargo: command not found`** — run `source "$HOME/.cargo/env"` or open a new terminal.
 - **`xcrun: error: invalid active developer path`** — run `xcode-select --install`.
-- **Window opens but no packages load** — make sure `brew` works in your own terminal (`brew --version`); the app shells out to your local Homebrew.
+- **Window opens but no packages load** — check `brew --version` works in your terminal; the app drives your local Homebrew.
 
 ## Using it
 
@@ -117,7 +103,7 @@ Homebrew has no GUI API, so brew·store splits the work:
 - **Browsing, search, and trending** hit Homebrew's public JSON API (`formulae.brew.sh`) directly from the UI and cache results locally (daily).
 - **Local operations** (`list`, `outdated`, `install`, `uninstall`, `upgrade`, `update`, `cleanup`, `--version`, `--prefix`) shell out to your local `brew` binary from a small Rust backend, streaming output back to the UI.
 
-Built with [Tauri 2](https://tauri.app) (Rust) + [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev), with plain CSS for the UI. Because a sandboxed Mac-App-Store app can't run `brew`, this ships as a direct-download app.
+Built with [Tauri 2](https://tauri.app) (Rust) + [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev), with plain CSS for the UI. It ships as a direct-download DMG for now; a Mac App Store version is planned.
 
 ## Security
 
@@ -127,7 +113,7 @@ Built with [Tauri 2](https://tauri.app) (Rust) + [React 19](https://react.dev) +
 
 ## Contributing
 
-Issues and PRs welcome. Follow **Build & run** above to get a dev environment — `npm run tauri dev` hot-reloads, `npm run build` type-checks and builds the frontend, and `npm run check` runs the progress-parser self-check.
+Issues and PRs welcome. Follow **Build from source** above to get a dev environment — `npm run tauri dev` hot-reloads, `npm run build` type-checks and builds the frontend, and `npm run check` runs the progress-parser self-check.
 
 ## License
 
